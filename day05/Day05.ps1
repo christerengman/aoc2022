@@ -1,4 +1,23 @@
 [string[]] $stacks = @("") * 9  # TODO: Make dynamic
+[string[]] $stacks2 = @("") * 9  # TODO: Make dynamic
+
+function Move-Crate {
+  param (
+    [ref] $r,
+    [int] $from,
+    [int] $to,
+    [int] $count
+  )
+  # Lookup reference
+  [string[]] $s = $r.Value
+
+  # 1 based to 0 based
+  $from--
+  $to--
+
+  $s[$to] = $s[$from].Substring(0, $count) + $s[$to]
+  $s[$from] = $s[$from].Substring($count)
+}
 
 Get-Content (Join-Path $PSScriptRoot "input.txt") | 
 ForEach-Object {
@@ -8,6 +27,7 @@ ForEach-Object {
       $c = $layer.Substring($i, 1)
       if (-not [string]::IsNullOrWhiteSpace($c)) {
         $stacks[$i] += $c
+        $stacks2[$i] += $c
       }
     }
 
@@ -22,15 +42,16 @@ ForEach-Object {
 
   [void] ($_ -match 'move (\d+) from (\d+) to (\d+)')
   $n, $from, $to = $Matches[1..3]
+
+  # CrateMover 9000
   for ($i = 0; $i -lt $n; $i++) {
-    $stacks[$to - 1] = $stacks[$from - 1].Substring(0,1) + $stacks[$to - 1]
-    $stacks[$from - 1] = $stacks[$from - 1].Substring(1)
+    Move-Crate ([ref] $stacks) $from $to 1
   }
+
+  # CrateMover 9001
+  Move-Crate ([ref] $stacks2) $from $to $n
+
 }
 
-$answer = ""
-foreach ($stack in $stacks) {
-  $answer += $stack.Substring(0,1)
-}
-
-$answer
+-join $stacks.ForEach({ $_.Substring(0,1) })
+-join $stacks2.ForEach({ $_.Substring(0,1) })
